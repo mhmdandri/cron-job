@@ -1,0 +1,5 @@
+.env
+*.exe
+*.bin
+cron-job
+.DS_Store

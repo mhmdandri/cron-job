@@ -1,0 +1,18 @@
+[Unit]
+Description=Shipment API Cron Monitor Service
+After=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/var/www/cron-job
+ExecStart=/var/www/cron-job/cron-job
+Restart=always
+RestartSec=5
+Environment=PORT=8080
+Environment=TARGET_URL=https://shipment.mohaproject.tech/api/cron/monitor
+Environment=BEARER_TOKEN=KMASLDKMNOINFNKmknsnqiwjij19980jn
+Environment=CRON_SCHEDULE=15m
+
+[Install]
+WantedBy=multi-user.target
