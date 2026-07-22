@@ -28,6 +28,10 @@ type UpdateScheduleRequest struct {
 	Interval string `json:"interval" binding:"required"`
 }
 
+type ToggleScheduleRequest struct {
+	Enabled *bool `json:"enabled"`
+}
+
 func (h *APIHandler) HealthCheck(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"status":  "ok",
@@ -39,6 +43,12 @@ func (h *APIHandler) GetStatus(c *gin.Context) {
 	schedInfo := h.scheduler.GetScheduleInfo()
 	stats := h.cronService.GetStats()
 
+	enabled, _ := schedInfo["enabled"].(bool)
+	statusStr := "running"
+	if !enabled {
+		statusStr = "paused"
+	}
+
 	nextRunTime, _ := schedInfo["next_run"].(time.Time)
 	var secondsRemaining int64 = 0
 	if !nextRunTime.IsZero() {
@@ -49,7 +59,8 @@ func (h *APIHandler) GetStatus(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"status":           "running",
+		"status":           statusStr,
+		"enabled":          enabled,
 		"schedule":         schedInfo["schedule"],
 		"next_run":         schedInfo["next_run"],
 		"next_run_seconds": secondsRemaining,
@@ -93,5 +104,36 @@ func (h *APIHandler) UpdateSchedule(c *gin.Context) {
 		"message":  "Schedule updated successfully",
 		"interval": req.Interval,
 		"info":     h.scheduler.GetScheduleInfo(),
+	})
+}
+
+func (h *APIHandler) ToggleSchedule(c *gin.Context) {
+	var req ToggleScheduleRequest
+	var newStatus bool
+
+	if err := c.ShouldBindJSON(&req); err == nil && req.Enabled != nil {
+		newStatus = *req.Enabled
+		if err := h.scheduler.SetEnabled(newStatus); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+	} else {
+		var err error
+		newStatus, err = h.scheduler.ToggleEnabled()
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+	}
+
+	msg := "Cron schedule activated"
+	if !newStatus {
+		msg = "Cron schedule paused"
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": msg,
+		"enabled": newStatus,
+		"info":    h.scheduler.GetScheduleInfo(),
 	})
 }

@@ -1,509 +1,758 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Shipment API Cron Monitor</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
     <style>
-        :root {
-            --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%);
-            --card-bg: rgba(30, 41, 59, 0.7);
-            --card-border: rgba(255, 255, 255, 0.1);
-            --text-primary: #f8fafc;
-            --text-secondary: #94a3b8;
-            --accent-blue: #38bdf8;
-            --accent-green: #22c55e;
-            --accent-red: #ef4444;
-            --accent-amber: #f59e0b;
-            --purple: #6366f1;
-        }
+      :root {
+        --bg-gradient: linear-gradient(
+          135deg,
+          #0f172a 0%,
+          #1e1b4b 50%,
+          #0f172a 100%
+        );
+        --card-bg: rgba(30, 41, 59, 0.7);
+        --card-border: rgba(255, 255, 255, 0.1);
+        --text-primary: #f8fafc;
+        --text-secondary: #94a3b8;
+        --accent-blue: #38bdf8;
+        --accent-green: #22c55e;
+        --accent-red: #ef4444;
+        --accent-amber: #f59e0b;
+        --purple: #6366f1;
+      }
 
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: 'Inter', system-ui, -apple-system, sans-serif;
-        }
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+        font-family:
+          "Inter",
+          system-ui,
+          -apple-system,
+          sans-serif;
+      }
 
-        body {
-            background: var(--bg-gradient);
-            color: var(--text-primary);
-            min-height: 100vh;
-            padding: 2rem 1rem;
-            display: flex;
-            justify-content: center;
-        }
+      body {
+        background: var(--bg-gradient);
+        color: var(--text-primary);
+        min-height: 100vh;
+        padding: 2rem 1rem;
+        display: flex;
+        justify-content: center;
+      }
 
-        .container {
-            max-width: 1000px;
-            width: 100%;
-            display: flex;
-            flex-direction: column;
-            gap: 1.5rem;
-        }
+      .container {
+        max-width: 1000px;
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+      }
 
+      header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid var(--card-border);
+      }
+
+      .logo {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+      }
+
+      .logo-icon {
+        width: 40px;
+        height: 40px;
+        background: linear-gradient(135deg, #6366f1, #38bdf8);
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.2rem;
+        font-weight: bold;
+        box-shadow: 0 4px 15px rgba(56, 189, 248, 0.3);
+      }
+
+      h1 {
+        font-size: 1.5rem;
+        font-weight: 700;
+        background: linear-gradient(to right, #f8fafc, #38bdf8);
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
+
+      .badge {
+        padding: 0.25rem 0.75rem;
+        border-radius: 9999px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+      }
+
+      .badge-success {
+        background: rgba(34, 197, 94, 0.2);
+        color: var(--accent-green);
+        border: 1px solid rgba(34, 197, 94, 0.4);
+      }
+
+      .badge-danger {
+        background: rgba(239, 68, 68, 0.2);
+        color: var(--accent-red);
+        border: 1px solid rgba(239, 68, 68, 0.4);
+      }
+
+      /* Toggle Switch */
+      .switch-container {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+      }
+
+      .switch {
+        position: relative;
+        display: inline-block;
+        width: 52px;
+        height: 28px;
+      }
+
+      .switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+      }
+
+      .slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: rgba(239, 68, 68, 0.3);
+        border: 1px solid rgba(239, 68, 68, 0.5);
+        transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        border-radius: 34px;
+      }
+
+      .slider:before {
+        position: absolute;
+        content: "";
+        height: 20px;
+        width: 20px;
+        left: 3px;
+        bottom: 3px;
+        background-color: #cbd5e1;
+        transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        border-radius: 50%;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+      }
+
+      input:checked + .slider {
+        background-color: rgba(34, 197, 94, 0.3);
+        border-color: rgba(34, 197, 94, 0.5);
+      }
+
+      input:checked + .slider:before {
+        transform: translateX(24px);
+        background-color: #22c55e;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 1.25rem;
+      }
+
+      .card {
+        background: var(--card-bg);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid var(--card-border);
+        border-radius: 16px;
+        padding: 1.5rem;
+        box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+      }
+
+      .card-header {
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: var(--text-secondary);
+        margin-bottom: 0.5rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .card-value {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        word-break: break-all;
+      }
+
+      .controls {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        margin-top: 1rem;
+      }
+
+      .btn {
+        background: rgba(255, 255, 255, 0.08);
+        color: var(--text-primary);
+        border: 1px solid var(--card-border);
+        padding: 0.6rem 1.2rem;
+        border-radius: 10px;
+        font-weight: 600;
+        font-size: 0.875rem;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+
+      .btn:hover {
+        background: rgba(255, 255, 255, 0.15);
+        transform: translateY(-2px);
+      }
+
+      .btn-primary {
+        background: linear-gradient(135deg, #6366f1, #38bdf8);
+        border: none;
+        color: #fff;
+        box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
+      }
+
+      .btn-primary:hover {
+        background: linear-gradient(135deg, #4f46e5, #0284c7);
+        box-shadow: 0 6px 20px rgba(99, 102, 241, 0.5);
+      }
+
+      .btn-active {
+        border-color: var(--accent-blue);
+        background: rgba(56, 189, 248, 0.2);
+        color: var(--accent-blue);
+      }
+
+      .custom-input-group {
+        display: flex;
+        gap: 0.5rem;
+        margin-top: 0.75rem;
+        width: 100%;
+      }
+
+      input[type="text"] {
+        background: rgba(15, 23, 42, 0.6);
+        border: 1px solid var(--card-border);
+        color: var(--text-primary);
+        padding: 0.6rem 1rem;
+        border-radius: 10px;
+        font-size: 0.875rem;
+        flex: 1;
+        outline: none;
+      }
+
+      input[type="text"]:focus {
+        border-color: var(--accent-blue);
+      }
+
+      .table-container {
+        overflow-x: auto;
+        margin-top: 1rem;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        text-align: left;
+        font-size: 0.875rem;
+      }
+
+      th {
+        padding: 0.75rem 1rem;
+        color: var(--text-secondary);
+        font-weight: 600;
+        border-bottom: 1px solid var(--card-border);
+      }
+
+      td {
+        padding: 0.875rem 1rem;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        color: var(--text-primary);
+      }
+
+      tr:hover td {
+        background: rgba(255, 255, 255, 0.02);
+      }
+
+      .status-pill {
+        display: inline-block;
+        padding: 0.2rem 0.5rem;
+        border-radius: 6px;
+        font-weight: 600;
+        font-size: 0.75rem;
+      }
+
+      .status-200 {
+        background: rgba(34, 197, 94, 0.2);
+        color: var(--accent-green);
+      }
+      .status-error {
+        background: rgba(239, 68, 68, 0.2);
+        color: var(--accent-red);
+      }
+
+      .response-snippet {
+        max-width: 300px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        font-family: monospace;
+        font-size: 0.8rem;
+        color: var(--text-secondary);
+      }
+
+      .toast {
+        position: fixed;
+        bottom: 2rem;
+        right: 2rem;
+        padding: 1rem 1.5rem;
+        border-radius: 10px;
+        background: var(--card-bg);
+        border: 1px solid var(--card-border);
+        backdrop-filter: blur(10px);
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+        display: none;
+        z-index: 100;
+      }
+
+      @media (max-width: 640px) {
         header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding-bottom: 1rem;
-            border-bottom: 1px solid var(--card-border);
+          flex-direction: column;
+          align-items: flex-start;
+          gap: 0.75rem;
         }
-
-        .logo {
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-        }
-
-        .logo-icon {
-            width: 40px;
-            height: 40px;
-            background: linear-gradient(135deg, #6366f1, #38bdf8);
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.2rem;
-            font-weight: bold;
-            box-shadow: 0 4px 15px rgba(56, 189, 248, 0.3);
-        }
-
-        h1 {
-            font-size: 1.5rem;
-            font-weight: 700;
-            background: linear-gradient(to right, #f8fafc, #38bdf8);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        .badge {
-            padding: 0.25rem 0.75rem;
-            border-radius: 9999px;
-            font-size: 0.75rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-        }
-
-        .badge-success {
-            background: rgba(34, 197, 94, 0.2);
-            color: var(--accent-green);
-            border: 1px solid rgba(34, 197, 94, 0.4);
-        }
-
         .grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 1.25rem;
+          grid-template-columns: 1fr;
         }
-
-        .card {
-            background: var(--card-bg);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border: 1px solid var(--card-border);
-            border-radius: 16px;
-            padding: 1.5rem;
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
-        }
-
-        .card-header {
-            font-size: 0.875rem;
-            font-weight: 500;
-            color: var(--text-secondary);
-            margin-bottom: 0.5rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .card-value {
-            font-size: 1.5rem;
-            font-weight: 700;
-            color: var(--text-primary);
-            word-break: break-all;
-        }
-
-        .controls {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 0.75rem;
-            margin-top: 1rem;
-        }
-
-        .btn {
-            background: rgba(255, 255, 255, 0.08);
-            color: var(--text-primary);
-            border: 1px solid var(--card-border);
-            padding: 0.6rem 1.2rem;
-            border-radius: 10px;
-            font-weight: 600;
-            font-size: 0.875rem;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .btn:hover {
-            background: rgba(255, 255, 255, 0.15);
-            transform: translateY(-2px);
-        }
-
-        .btn-primary {
-            background: linear-gradient(135deg, #6366f1, #38bdf8);
-            border: none;
-            color: #fff;
-            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
-        }
-
-        .btn-primary:hover {
-            background: linear-gradient(135deg, #4f46e5, #0284c7);
-            box-shadow: 0 6px 20px rgba(99, 102, 241, 0.5);
-        }
-
-        .btn-active {
-            border-color: var(--accent-blue);
-            background: rgba(56, 189, 248, 0.2);
-            color: var(--accent-blue);
-        }
-
-        .custom-input-group {
-            display: flex;
-            gap: 0.5rem;
-            margin-top: 0.75rem;
-            width: 100%;
-        }
-
-        input[type="text"] {
-            background: rgba(15, 23, 42, 0.6);
-            border: 1px solid var(--card-border);
-            color: var(--text-primary);
-            padding: 0.6rem 1rem;
-            border-radius: 10px;
-            font-size: 0.875rem;
-            flex: 1;
-            outline: none;
-        }
-
-        input[type="text"]:focus {
-            border-color: var(--accent-blue);
-        }
-
-        .table-container {
-            overflow-x: auto;
-            margin-top: 1rem;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            text-align: left;
-            font-size: 0.875rem;
-        }
-
-        th {
-            padding: 0.75rem 1rem;
-            color: var(--text-secondary);
-            font-weight: 600;
-            border-bottom: 1px solid var(--card-border);
-        }
-
-        td {
-            padding: 0.875rem 1rem;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-            color: var(--text-primary);
-        }
-
-        tr:hover td {
-            background: rgba(255, 255, 255, 0.02);
-        }
-
-        .status-pill {
-            display: inline-block;
-            padding: 0.2rem 0.5rem;
-            border-radius: 6px;
-            font-weight: 600;
-            font-size: 0.75rem;
-        }
-
-        .status-200 { background: rgba(34, 197, 94, 0.2); color: var(--accent-green); }
-        .status-error { background: rgba(239, 68, 68, 0.2); color: var(--accent-red); }
-
-        .response-snippet {
-            max-width: 300px;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            font-family: monospace;
-            font-size: 0.8rem;
-            color: var(--text-secondary);
-        }
-
-        .toast {
-            position: fixed;
-            bottom: 2rem;
-            right: 2rem;
-            padding: 1rem 1.5rem;
-            border-radius: 10px;
-            background: var(--card-bg);
-            border: 1px solid var(--card-border);
-            backdrop-filter: blur(10px);
-            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
-            display: none;
-            z-index: 100;
-        }
-
-        @media (max-width: 640px) {
-            header { flex-direction: column; align-items: flex-start; gap: 0.75rem; }
-            .grid { grid-template-columns: 1fr; }
-        }
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
     <div class="container">
-        <header>
-            <div class="logo">
-                <div class="logo-icon">🚀</div>
-                <div>
-                    <h1>Shipment Cron Monitor</h1>
-                    <p style="font-size: 0.8rem; color: var(--text-secondary);">Automated API Hit Scheduler</p>
-                </div>
-            </div>
-            <span class="badge badge-success" id="service-status">Status: Active</span>
-        </header>
+      <header>
+        <div class="logo">
+          <div class="logo-icon">🚀</div>
+          <div>
+            <h1>Shipment Cron Monitor</h1>
+            <p style="font-size: 0.8rem; color: var(--text-secondary)">
+              Automated API Hit Scheduler
+            </p>
+          </div>
+        </div>
+        <div class="switch-container">
+          <span class="badge badge-success" id="service-status"
+            >Status: Active (ON)</span
+          >
+          <label class="switch" title="Toggle Cron Job ON / OFF">
+            <input
+              type="checkbox"
+              id="cron-toggle"
+              checked
+              onchange="toggleCronState(this.checked)"
+            />
+            <span class="slider"></span>
+          </label>
+        </div>
+      </header>
 
-        <div class="grid">
-            <div class="card">
-                <div class="card-header">
-                    <span>Interval Cron</span>
-                    <span id="current-schedule-badge" style="color: var(--accent-blue); font-weight: 600;">15m</span>
-                </div>
-                <div class="card-value" id="current-schedule">15 Menit</div>
+      <div class="grid">
+        <div class="card">
+          <div class="card-header">
+            <span>Interval Cron</span>
+            <span
+              id="current-schedule-badge"
+              style="color: var(--accent-blue); font-weight: 600"
+              >15m</span
+            >
+          </div>
+          <div class="card-value" id="current-schedule">15 Menit</div>
 
-                <div class="controls">
-                    <button class="btn" id="btn-15m" onclick="setSchedule('15m')">⏱️ 15 Menit</button>
-                    <button class="btn" id="btn-30m" onclick="setSchedule('30m')">⏱️ 30 Menit</button>
-                </div>
+          <div class="controls">
+            <button class="btn" id="btn-15m" onclick="setSchedule('15m')">
+              ⏱️ 15 Menit
+            </button>
+            <button class="btn" id="btn-30m" onclick="setSchedule('30m')">
+              ⏱️ 30 Menit
+            </button>
+          </div>
 
-                <div class="custom-input-group">
-                    <input type="text" id="custom-interval" placeholder="Custom: e.g. 10m atau */15 * * * *">
-                    <button class="btn" onclick="applyCustomSchedule()">Set</button>
-                </div>
-            </div>
-
-            <div class="card">
-                <div class="card-header">Target Endpoint API</div>
-                <div class="card-value" style="font-size: 0.95rem; font-family: monospace; color: var(--accent-blue);" id="target-url">
-                    https://shipment.mohaproject.tech/api/cron/monitor
-                </div>
-                <div style="margin-top: 1rem; font-size: 0.85rem; color: var(--text-secondary); display: flex; flex-direction: column; gap: 0.3rem;">
-                    <div>Hit Berikutnya Dalam: <strong id="countdown-text" style="color: var(--accent-amber); font-size: 1.1rem; font-weight: 700;">-</strong></div>
-                    <div>Waktu Hit: <strong id="next-run" style="color: var(--text-primary);">-</strong></div>
-                    <div>Hit Terakhir: <strong id="last-run" style="color: var(--text-primary);">-</strong></div>
-                </div>
-                <div style="margin-top: 1rem;">
-                    <button class="btn btn-primary" style="width: 100%; justify-content: center;" onclick="triggerManual()">
-                        ⚡ Hit API Sekarang (Manual)
-                    </button>
-                </div>
-            </div>
+          <div class="custom-input-group">
+            <input
+              type="text"
+              id="custom-interval"
+              placeholder="Custom: e.g. 10m atau */15 * * * *"
+            />
+            <button class="btn" onclick="applyCustomSchedule()">Set</button>
+          </div>
         </div>
 
         <div class="card">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-                <h2 style="font-size: 1.1rem; font-weight: 600;">Riwayat Hit API</h2>
-                <button class="btn" onclick="loadData()" style="padding: 0.4rem 0.8rem; font-size: 0.75rem;">🔄 Refresh</button>
+          <div class="card-header">Target Endpoint API</div>
+          <div
+            class="card-value"
+            style="
+              font-size: 0.95rem;
+              font-family: monospace;
+              color: var(--accent-blue);
+            "
+            id="target-url"
+          >
+            https://shipment.mohaproject.tech/api/cron/monitor
+          </div>
+          <div
+            style="
+              margin-top: 1rem;
+              font-size: 0.85rem;
+              color: var(--text-secondary);
+              display: flex;
+              flex-direction: column;
+              gap: 0.3rem;
+            "
+          >
+            <div>
+              Hit Berikutnya Dalam:
+              <strong
+                id="countdown-text"
+                style="
+                  color: var(--accent-amber);
+                  font-size: 1.1rem;
+                  font-weight: 700;
+                "
+                >-</strong
+              >
             </div>
-            
-            <div class="table-container">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Waktu</th>
-                            <th>Trigger</th>
-                            <th>Status</th>
-                            <th>Durasi</th>
-                            <th>Response Body</th>
-                        </tr>
-                    </thead>
-                    <tbody id="logs-body">
-                        <tr>
-                            <td colspan="5" style="text-align: center; color: var(--text-secondary); padding: 2rem;">
-                                Memuat data...
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
+            <div>
+              Waktu Hit:
+              <strong id="next-run" style="color: var(--text-primary)"
+                >-</strong
+              >
             </div>
+            <div>
+              Hit Terakhir:
+              <strong id="last-run" style="color: var(--text-primary)"
+                >-</strong
+              >
+            </div>
+          </div>
+          <div style="margin-top: 1rem">
+            <button
+              class="btn btn-primary"
+              style="width: 100%; justify-content: center"
+              onclick="triggerManual()"
+            >
+              ⚡ Hit API Sekarang (Manual)
+            </button>
+          </div>
         </div>
+      </div>
+
+      <div class="card">
+        <div
+          style="
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+          "
+        >
+          <h2 style="font-size: 1.1rem; font-weight: 600">Riwayat Hit API</h2>
+          <button
+            class="btn"
+            onclick="loadData()"
+            style="padding: 0.4rem 0.8rem; font-size: 0.75rem"
+          >
+            🔄 Refresh
+          </button>
+        </div>
+
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Waktu</th>
+                <th>Trigger</th>
+                <th>Status</th>
+                <th>Durasi</th>
+                <th>Response Body</th>
+              </tr>
+            </thead>
+            <tbody id="logs-body">
+              <tr>
+                <td
+                  colspan="5"
+                  style="
+                    text-align: center;
+                    color: var(--text-secondary);
+                    padding: 2rem;
+                  "
+                >
+                  Memuat data...
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
 
     <div class="toast" id="toast"></div>
 
     <script>
-        let targetNextRunTime = null;
+      let targetNextRunTime = null;
+      let isCronEnabled = true;
 
-        function showToast(msg, isError = false) {
-            const toast = document.getElementById('toast');
-            toast.innerText = msg;
-            toast.style.borderColor = isError ? 'var(--accent-red)' : 'var(--accent-green)';
-            toast.style.display = 'block';
-            setTimeout(() => { toast.style.display = 'none'; }, 3000);
+      function showToast(msg, isError = false) {
+        const toast = document.getElementById("toast");
+        toast.innerText = msg;
+        toast.style.borderColor = isError
+          ? "var(--accent-red)"
+          : "var(--accent-green)";
+        toast.style.display = "block";
+        setTimeout(() => {
+          toast.style.display = "none";
+        }, 3000);
+      }
+
+      function formatDate(dateStr) {
+        if (!dateStr || dateStr.startsWith("0001")) return "-";
+        const d = new Date(dateStr);
+        return (
+          d.toLocaleTimeString("id-ID", {
+            hour: "2-digit",
+            minute: "2-digit",
+            second: "2-digit",
+          }) +
+          " (" +
+          d.toLocaleDateString("id-ID") +
+          ")"
+        );
+      }
+
+      function updateCountdown() {
+        const cdElem = document.getElementById("countdown-text");
+        if (!isCronEnabled) {
+          cdElem.innerText = "⏸️ Cron Job Nonaktif (OFF)";
+          cdElem.style.color = "var(--accent-red)";
+          return;
+        }
+        cdElem.style.color = "var(--accent-amber)";
+
+        if (!targetNextRunTime) {
+          cdElem.innerText = "-";
+          return;
         }
 
-        function formatDate(dateStr) {
-            if (!dateStr || dateStr.startsWith('0001')) return '-';
-            const d = new Date(dateStr);
-            return d.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' }) + 
-                   ' (' + d.toLocaleDateString('id-ID') + ')';
+        const now = new Date().getTime();
+        const diffMs = targetNextRunTime - now;
+
+        if (diffMs <= 0) {
+          cdElem.innerText = "⚡ Sedang Menembak API...";
+          setTimeout(loadData, 2000); // Reload after trigger
+          return;
         }
 
-        function updateCountdown() {
-            const cdElem = document.getElementById('countdown-text');
-            if (!targetNextRunTime) {
-                cdElem.innerText = '-';
-                return;
-            }
+        const totalSec = Math.floor(diffMs / 1000);
+        const minutes = Math.floor(totalSec / 60);
+        const seconds = totalSec % 60;
 
-            const now = new Date().getTime();
-            const diffMs = targetNextRunTime - now;
-
-            if (diffMs <= 0) {
-                cdElem.innerText = "⚡ Sedang Menembak API...";
-                setTimeout(loadData, 2000); // Reload after trigger
-                return;
-            }
-
-            const totalSec = Math.floor(diffMs / 1000);
-            const minutes = Math.floor(totalSec / 60);
-            const seconds = totalSec % 60;
-
-            if (minutes > 0) {
-                cdElem.innerText = `${minutes} Menit ${seconds} Detik`;
-            } else {
-                cdElem.innerText = `${seconds} Detik`;
-            }
+        if (minutes > 0) {
+          cdElem.innerText = `${minutes} Menit ${seconds} Detik`;
+        } else {
+          cdElem.innerText = `${seconds} Detik`;
         }
+      }
 
-        async function loadData() {
-            try {
-                const [statusRes, logsRes] = await Promise.all([
-                    fetch('/api/status'),
-                    fetch('/api/logs')
-                ]);
+      async function loadData() {
+        try {
+          const [statusRes, logsRes] = await Promise.all([
+            fetch("/api/status"),
+            fetch("/api/logs"),
+          ]);
 
-                const statusData = await statusRes.json();
-                const logsData = await logsRes.json();
+          const statusData = await statusRes.json();
+          const logsData = await logsRes.json();
 
-                // Update Status UI
-                const sched = statusData.schedule || '15m';
-                document.getElementById('current-schedule').innerText = 
-                    sched === '15m' ? 'Setiap 15 Menit' : 
-                    sched === '30m' ? 'Setiap 30 Menit' : sched;
-                
-                document.getElementById('current-schedule-badge').innerText = sched;
-                document.getElementById('target-url').innerText = statusData.target;
-                document.getElementById('next-run').innerText = formatDate(statusData.next_run);
-                
-                if (statusData.next_run && !statusData.next_run.startsWith('0001')) {
-                    targetNextRunTime = new Date(statusData.next_run).getTime();
-                    updateCountdown();
-                } else {
-                    targetNextRunTime = null;
-                }
+          // Update Cron Enabled Status
+          isCronEnabled = statusData.enabled !== false;
+          const statusBadge = document.getElementById("service-status");
+          const toggleCheckbox = document.getElementById("cron-toggle");
+          toggleCheckbox.checked = isCronEnabled;
 
-                if (statusData.stats && statusData.stats.last_run) {
-                    document.getElementById('last-run').innerText = formatDate(statusData.stats.last_run);
-                }
+          if (isCronEnabled) {
+            statusBadge.className = "badge badge-success";
+            statusBadge.innerText = "Status: Active (ON)";
+          } else {
+            statusBadge.className = "badge badge-danger";
+            statusBadge.innerText = "Status: Nonaktif (OFF)";
+          }
 
-                // Highlight active button
-                document.getElementById('btn-15m').classList.toggle('btn-active', sched === '15m');
-                document.getElementById('btn-30m').classList.toggle('btn-active', sched === '30m');
+          // Update Status UI
+          const sched = statusData.schedule || "15m";
+          document.getElementById("current-schedule").innerText =
+            sched === "15m"
+              ? "Setiap 15 Menit"
+              : sched === "30m"
+                ? "Setiap 30 Menit"
+                : sched;
 
-                // Render Logs Table
-                const tbody = document.getElementById('logs-body');
-                if (!logsData.logs || logsData.logs.length === 0) {
-                    tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--text-secondary); padding: 2rem;">Belum ada riwayat eksekusi.</td></tr>`;
-                    return;
-                }
+          document.getElementById("current-schedule-badge").innerText = sched;
+          document.getElementById("target-url").innerText = statusData.target;
+          document.getElementById("next-run").innerText = formatDate(
+            statusData.next_run,
+          );
 
-                tbody.innerHTML = logsData.logs.map(log => {
-                    const statusClass = log.success ? 'status-200' : 'status-error';
-                    const triggerBadge = log.trigger_type === 'manual' ? '⚡ Manual' : '⏰ Scheduled';
-                    const responseText = log.error ? log.error : (log.response_body || 'OK');
+          if (statusData.next_run && !statusData.next_run.startsWith("0001")) {
+            targetNextRunTime = new Date(statusData.next_run).getTime();
+            updateCountdown();
+          } else {
+            targetNextRunTime = null;
+            updateCountdown();
+          }
 
-                    return `
+          if (statusData.stats && statusData.stats.last_run) {
+            document.getElementById("last-run").innerText = formatDate(
+              statusData.stats.last_run,
+            );
+          }
+
+          // Highlight active button
+          document
+            .getElementById("btn-15m")
+            .classList.toggle("btn-active", sched === "15m");
+          document
+            .getElementById("btn-30m")
+            .classList.toggle("btn-active", sched === "30m");
+
+          // Render Logs Table
+          const tbody = document.getElementById("logs-body");
+          if (!logsData.logs || logsData.logs.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--text-secondary); padding: 2rem;">Belum ada riwayat eksekusi.</td></tr>`;
+            return;
+          }
+
+          tbody.innerHTML = logsData.logs
+            .map((log) => {
+              const statusClass = log.success ? "status-200" : "status-error";
+              const triggerBadge =
+                log.trigger_type === "manual" ? "⚡ Manual" : "⏰ Scheduled";
+              const responseText = log.error
+                ? log.error
+                : log.response_body || "OK";
+
+              return `
                         <tr>
                             <td>${formatDate(log.timestamp)}</td>
                             <td><span style="font-size: 0.8rem; font-weight: 500;">${triggerBadge}</span></td>
                             <td><span class="status-pill ${statusClass}">${log.status_code || (log.success ? 200 : 500)}</span></td>
                             <td>${log.duration_ms} ms</td>
-                            <td><div class="response-snippet" title="${responseText.replace(/"/g, '&quot;')}">${responseText}</div></td>
+                            <td><div class="response-snippet" title="${responseText.replace(/"/g, "&quot;")}">${responseText}</div></td>
                         </tr>
                     `;
-                }).join('');
-
-            } catch (err) {
-                console.error('Failed to load status:', err);
-            }
+            })
+            .join("");
+        } catch (err) {
+          console.error("Failed to load status:", err);
         }
+      }
 
-        async function setSchedule(interval) {
-            try {
-                const res = await fetch('/api/schedule', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ interval: interval })
-                });
-
-                const data = await res.json();
-                if (res.ok) {
-                    showToast(`Interval berhasil diubah ke ${interval}`);
-                    loadData();
-                } else {
-                    showToast(data.error || 'Gagal mengubah schedule', true);
-                }
-            } catch (err) {
-                showToast('Terjadi kesalahan jaringan', true);
-            }
+      async function toggleCronState(enabled) {
+        try {
+          const res = await fetch("/api/toggle", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ enabled: enabled }),
+          });
+          const data = await res.json();
+          if (res.ok) {
+            showToast(
+              data.message ||
+                (enabled ? "Cron Job Diaktifkan" : "Cron Job Dinonaktifkan"),
+            );
+            loadData();
+          } else {
+            showToast(data.error || "Gagal mengubah status Cron Job", true);
+            document.getElementById("cron-toggle").checked = !enabled;
+          }
+        } catch (err) {
+          showToast("Terjadi kesalahan jaringan", true);
+          document.getElementById("cron-toggle").checked = !enabled;
         }
+      }
 
-        function applyCustomSchedule() {
-            const val = document.getElementById('custom-interval').value.trim();
-            if (!val) {
-                showToast('Masukkan format interval valid', true);
-                return;
-            }
-            setSchedule(val);
+      async function setSchedule(interval) {
+        try {
+          const res = await fetch("/api/schedule", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ interval: interval }),
+          });
+
+          const data = await res.json();
+          if (res.ok) {
+            showToast(`Interval berhasil diubah ke ${interval}`);
+            loadData();
+          } else {
+            showToast(data.error || "Gagal mengubah schedule", true);
+          }
+        } catch (err) {
+          showToast("Terjadi kesalahan jaringan", true);
         }
+      }
 
-        async function triggerManual() {
-            showToast('Menjalankan HTTP Hit...');
-            try {
-                const res = await fetch('/api/trigger', { method: 'POST' });
-                const data = await res.json();
-                if (res.ok) {
-                    showToast('Hit API Berhasil!');
-                    loadData();
-                } else {
-                    showToast(data.error || 'Trigger Gagal', true);
-                }
-            } catch (err) {
-                showToast('Terjadi kesalahan saat hit API', true);
-            }
+      function applyCustomSchedule() {
+        const val = document.getElementById("custom-interval").value.trim();
+        if (!val) {
+          showToast("Masukkan format interval valid", true);
+          return;
         }
+        setSchedule(val);
+      }
 
-        // Initial Load & Refresh every 10 seconds
-        loadData();
-        setInterval(loadData, 10000);
-        // Real-time Countdown timer tick every 1 second
-        setInterval(updateCountdown, 1000);
+      async function triggerManual() {
+        showToast("Menjalankan HTTP Hit...");
+        try {
+          const res = await fetch("/api/trigger", { method: "POST" });
+          const data = await res.json();
+          if (res.ok) {
+            showToast("Hit API Berhasil!");
+            loadData();
+          } else {
+            showToast(data.error || "Trigger Gagal", true);
+          }
+        } catch (err) {
+          showToast("Terjadi kesalahan saat hit API", true);
+        }
+      }
+
+      // Initial Load & Refresh every 10 seconds
+      loadData();
+      setInterval(loadData, 10000);
+      // Real-time Countdown timer tick every 1 second
+      setInterval(updateCountdown, 1000);
     </script>
-</body>
+  </body>
 </html>

@@ -53,6 +53,7 @@ func main() {
 	r.GET("/api/logs", apiHandler.GetLogs)
 	r.POST("/api/trigger", apiHandler.TriggerManual)
 	r.POST("/api/schedule", apiHandler.UpdateSchedule)
+	r.POST("/api/toggle", apiHandler.ToggleSchedule)
 
 	// Fallback route to UI
 	r.NoRoute(func(c *gin.Context) {

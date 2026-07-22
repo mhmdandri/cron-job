@@ -17,6 +17,7 @@ type SchedulerManager struct {
 	schedule    string
 	mutex       sync.RWMutex
 	nextRun     time.Time
+	enabled     bool
 }
 
 func NewSchedulerManager(cronService *CronService, initialSchedule string) (*SchedulerManager, error) {
@@ -28,6 +29,7 @@ func NewSchedulerManager(cronService *CronService, initialSchedule string) (*Sch
 		cronInst:    c,
 		cronService: cronService,
 		schedule:    initialSchedule,
+		enabled:     true,
 	}
 
 	if err := sm.setSchedule(initialSchedule); err != nil {
@@ -75,6 +77,15 @@ func (sm *SchedulerManager) setSchedule(newSpec string) error {
 	// Remove old job if exists
 	if sm.entryID != 0 {
 		sm.cronInst.Remove(sm.entryID)
+		sm.entryID = 0
+	}
+
+	sm.schedule = newSpec
+
+	if !sm.enabled {
+		sm.nextRun = time.Time{}
+		log.Printf("[SCHEDULER] Updated cron schedule spec to '%s', but cron is currently DISABLED", newSpec)
+		return nil
 	}
 
 	entryID, err := sm.cronInst.AddFunc(spec, func() {
@@ -87,7 +98,6 @@ func (sm *SchedulerManager) setSchedule(newSpec string) error {
 	}
 
 	sm.entryID = entryID
-	sm.schedule = newSpec
 	sm.updateNextRun()
 
 	log.Printf("[SCHEDULER] Updated cron schedule to '%s' (Parsed: '%s')", newSpec, spec)
@@ -95,6 +105,10 @@ func (sm *SchedulerManager) setSchedule(newSpec string) error {
 }
 
 func (sm *SchedulerManager) updateNextRun() {
+	if sm.entryID == 0 {
+		sm.nextRun = time.Time{}
+		return
+	}
 	entry := sm.cronInst.Entry(sm.entryID)
 	sm.nextRun = entry.Next
 }
@@ -106,16 +120,57 @@ func (sm *SchedulerManager) UpdateSchedule(newSpec string) error {
 	return sm.setSchedule(newSpec)
 }
 
+func (sm *SchedulerManager) SetEnabled(enable bool) error {
+	sm.mutex.Lock()
+	defer sm.mutex.Unlock()
+
+	if sm.enabled == enable {
+		return nil
+	}
+
+	sm.enabled = enable
+
+	if enable {
+		log.Printf("[SCHEDULER] Cron job ENABLED")
+		return sm.setSchedule(sm.schedule)
+	} else {
+		log.Printf("[SCHEDULER] Cron job DISABLED")
+		if sm.entryID != 0 {
+			sm.cronInst.Remove(sm.entryID)
+			sm.entryID = 0
+		}
+		sm.nextRun = time.Time{}
+		return nil
+	}
+}
+
+func (sm *SchedulerManager) ToggleEnabled() (bool, error) {
+	sm.mutex.Lock()
+	targetState := !sm.enabled
+	sm.mutex.Unlock()
+
+	err := sm.SetEnabled(targetState)
+	return targetState, err
+}
+
 func (sm *SchedulerManager) GetScheduleInfo() map[string]interface{} {
 	sm.mutex.RLock()
 	defer sm.mutex.RUnlock()
 
-	entry := sm.cronInst.Entry(sm.entryID)
+	var nextRun time.Time
+	var prevRun time.Time
+	if sm.enabled && sm.entryID != 0 {
+		entry := sm.cronInst.Entry(sm.entryID)
+		nextRun = entry.Next
+		prevRun = entry.Prev
+	}
+
 	return map[string]interface{}{
 		"schedule":     sm.schedule,
 		"parsed_spec":  parseScheduleSpec(sm.schedule),
-		"next_run":     entry.Next,
-		"prev_run":     entry.Prev,
+		"next_run":     nextRun,
+		"prev_run":     prevRun,
 		"is_scheduled": sm.entryID != 0,
+		"enabled":      sm.enabled,
 	}
 }
