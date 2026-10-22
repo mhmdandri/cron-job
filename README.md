@@ -21,13 +21,13 @@ Aplikasi Scheduler Cron-Job ringan dan efisien yang dibangun menggunakan **Go**,
 
 ## 🛠️ Cara Mengakses Web UI Dashboard & API Endpoints
 
-| Endpoint | Method | Deskripsi |
-|---|---|---|
-| `/` | `GET` | Dashboard UI Interaktif |
-| `/health` | `GET` | Health Check Service |
-| `/api/status` | `GET` | Info Schedule saat ini, next run, & statistik |
-| `/api/logs` | `GET` | Riwayat log hasil hit API |
-| `/api/trigger` | `POST` | Hit API secara manual |
+| Endpoint        | Method | Deskripsi                                            |
+| --------------- | ------ | ---------------------------------------------------- |
+| `/`             | `GET`  | Dashboard UI Interaktif                              |
+| `/health`       | `GET`  | Health Check Service                                 |
+| `/api/status`   | `GET`  | Info Schedule saat ini, next run, & statistik        |
+| `/api/logs`     | `GET`  | Riwayat log hasil hit API                            |
+| `/api/trigger`  | `POST` | Hit API secara manual                                |
 | `/api/schedule` | `POST` | Ubah interval secara dinamis (`{"interval": "30m"}`) |
 
 ---
@@ -35,11 +35,13 @@ Aplikasi Scheduler Cron-Job ringan dan efisien yang dibangun menggunakan **Go**,
 ## 💻 Jalankan Lokal (Development)
 
 1. **Install Dependencies**:
+
    ```bash
    go mod tidy
    ```
 
 2. **Jalankan Service**:
+
    ```bash
    go run main.go
    ```
@@ -68,11 +70,13 @@ Aplikasi Scheduler Cron-Job ringan dan efisien yang dibangun menggunakan **Go**,
 ### Opsi B: Deploy Menggunakan Systemd (Direct Binary)
 
 1. **Build Binary untuk Linux di VPS (atau Cross-Compile)**:
+
    ```bash
    CGO_ENABLED=0 GOOS=linux go build -ldflags="-w -s" -o cron-job main.go
    ```
 
 2. **Pindahkan File ke Directory VPS**:
+
    ```bash
    mkdir -p /var/www/cron-job
    cp cron-job /var/www/cron-job/
@@ -81,6 +85,7 @@ Aplikasi Scheduler Cron-Job ringan dan efisien yang dibangun menggunakan **Go**,
    ```
 
 3. **Install Service Systemd**:
+
    ```bash
    cp cron-job.service /etc/systemd/system/
    systemctl daemon-reload
